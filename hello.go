@@ -1,5 +1,8 @@
 package main
 import "fmt"
 func main() {
-    fmt.Println("hello world")
+    
+    for index := 0; index < 10; index++ {
+        fmt.Println("hello world")    
+    }
 }
