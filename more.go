@@ -52,6 +52,7 @@ var moves int // number of times move is called
 
 // move tests if there is a peg at position pos that
 // can jump over another peg in direction dir. If the
+
 // move is valid, it is executed and move returns true.
 // Otherwise, move returns false.
 func move(pos, dir int) bool {
@@ -93,7 +94,7 @@ func solve() bool {
 					if solve() {
 						unmove(pos, dir)
 						fmt.Println(string(board))
-						time.Sleep(time.Second / 10)
+						time.Sleep(time.Second / 2)
 						return true
 					}
 					unmove(pos, dir)
@@ -118,4 +119,5 @@ func main() {
 		fmt.Println("no solution found")
 	}
 	fmt.Println(moves, "moves tried")
+	time.Sleep(time.Second * 30)
 }
