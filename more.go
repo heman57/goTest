@@ -49,7 +49,6 @@ func init() {
 }
 
 var moves int // number of times move is called
-
 // move tests if there is a peg at position pos that
 
 // can jump over another peg in direction dir. If the
