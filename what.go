@@ -104,8 +104,8 @@ func (l *Life) String() string {
 }
 
 func main() {
-	l := NewLife(40, 15)
-	for i := 0; i < 300; i++ {
+	l := NewLife(150, 35)
+	for i := 0; i < 100; i++ {
 		l.Step()
 		fmt.Print("\x0c", l) // Clear screen and print field.
 		time.Sleep(time.Second / 30)
