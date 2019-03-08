@@ -27,7 +27,7 @@ func getEmail(db *sql.DB, email string, client string) (isIn bool, status string
 }
 
 func main() {
-	db, err := sql.Open("mysql", "user:root@tcp(127.0.0.1:3306)/blacklist?parseTime=true")
+	db, err := sql.Open("mysql", "user@blacklist557:Admmin147@tcp(blacklist557.mysql.database.azure.com)/blacklist?parseTime=true")
 	if err != nil {
 		log.Fatal(err)
 	}
