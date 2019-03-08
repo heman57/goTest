@@ -35,7 +35,6 @@ func main() {
 
 	blckIn, err := db.Prepare("INSERT INTO blacklist(email,status,client,created) VALUES(?,?,?,?)")
 	delblck, err := db.Prepare(`DELETE FROM blacklist where email like ? limit 1;`)
-	//updfnd, err := db.Prepare("UPDATE indexed SET count = ? WHERE url = ?")
 
 	type jsonInput struct {
 		Email  string `json:"email"`
