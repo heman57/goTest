@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/80cf08fb-3d93-4830-9bcd-504eb99e4256/resourceGroups/Blacklist557/providers/Microsoft.Web/sites/Blacklist557",
+    "appService.deploySubpath": "Blacklist"
+}
