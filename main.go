@@ -125,7 +125,7 @@ func resolvePost(body []byte, postInput jsonInput, db *sql.DB, w http.ResponseWr
 }
 
 func resolveDelete(requestURL []string, client string, db *sql.DB, w http.ResponseWriter) {
-	delblck, _ := db.Prepare(`DELETE FROM blacklist where email like ? limit 1;`)
+	delblck, _ := db.Prepare(`DELETE FROM blacklist  WHERE email like ? and client like ?;`)
 	email := requestURL[2]
 	isIn, _, _ := getEmail(db, email, client)
 	if isIn {
