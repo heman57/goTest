@@ -1,0 +1,5 @@
+gox -osarch="linux/amd64" --output="build/app"
+docker build -t build/app .
+docker login blacklist.azurecr.io
+docker tag build/app blacklist.azurecr.io/blacklist
+docker push blacklist.azurecr.io/blacklist:latest

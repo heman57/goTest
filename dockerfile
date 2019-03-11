@@ -1,9 +1,13 @@
-FROM golang:1.8
+FROM golang
+RUN go get "github.com/go-sql-driver/mysql"
 
-WORKDIR /
-COPY . .
+RUN mkdir /app 
+ADD . /app/
+WORKDIR /app 
 
-RUN go get -d -v ./...
-RUN go install -v ./...
+EXPOSE 80
 
-CMD ["app"]
+CMD ["/app/main"]
+
+
+
