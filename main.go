@@ -28,6 +28,7 @@ func getEmail(db *sql.DB, email string, client string) (isIn bool, status string
 	case nil:
 		isIn = true
 	default:
+		isIn = false
 		panic(err)
 	}
 	return
@@ -84,7 +85,6 @@ func resolveGet(requestURL []string, client string, db *sql.DB, w http.ResponseW
 		emails, status, created := getEmails(db, client)
 		outJSON := `{"emails":[`
 		for index := range emails {
-			fmt.Println(index)
 			outJSON += `{"status": "` + status[index] + `", "email": "` + emails[index] + `", "created": "` + created[index].String() + `"},`
 		}
 		if outJSON[len(outJSON)-1:] == "," {
@@ -143,27 +143,42 @@ func main() {
 	}
 	db.SetMaxOpenConns(10)
 	var postInput jsonInput
+	//main function
 	APIRoot := func(w http.ResponseWriter, req *http.Request) {
-		body, _ := ioutil.ReadAll(req.Body)
-		client := "1"
-		requestURL := strings.Split(req.URL.Path, "/")
-		if requestURL[1] == "blacklist" {
-			switch req.Method {
-			case "GET":
-				resolveGet(requestURL, client, db, w)
-			case "POST":
-				resolvePost(body, postInput, db, w)
-			case "PUT":
-				fmt.Println("Not implemented.")
-			case "DELETE":
-				resolveDelete(requestURL, client, db, w)
-			default:
-				w.WriteHeader(http.StatusMethodNotAllowed)
-				w.Write([]byte(`{"error": {"code": "405", "status": "Forbiden", "message": "Method not allowed!"}}`))
-			}
+		var client string
+		body, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			log.Fatal(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"error": {"code": "500", "status": "Error", "message": "Request failed."}}`))
+			return
 		} else {
-			w.WriteHeader(http.StatusForbidden)
-			w.Write([]byte(`{"error": {"code": "403", "status": "Forbiden", "message": "Access denied!}}`))
+			if len(req.Header["Clientid"]) > 0 {
+				client = req.Header["Clientid"][0]
+			} else {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(`{"error": {"code": "400", "status": "Bad request", "message": "Client ID missing, data input is not correct."}}`))
+				return
+			}
+			requestURL := strings.Split(req.URL.Path, "/")
+			if requestURL[1] == "blacklist" {
+				switch req.Method {
+				case "GET":
+					resolveGet(requestURL, client, db, w)
+				case "POST":
+					resolvePost(body, postInput, db, w)
+				case "PUT":
+					fmt.Println("Not implemented.")
+				case "DELETE":
+					resolveDelete(requestURL, client, db, w)
+				default:
+					w.WriteHeader(http.StatusMethodNotAllowed)
+					w.Write([]byte(`{"error": {"code": "405", "status": "Forbiden", "message": "Method not allowed!"}}`))
+				}
+			} else {
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte(`{"error": {"code": "403", "status": "Forbiden", "message": "Access denied!"}}`))
+			}
 		}
 	}
 	http.HandleFunc("/", APIRoot)
