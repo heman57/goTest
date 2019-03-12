@@ -14,10 +14,16 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type jsonInput struct {
+type jsonPOSTInput struct {
 	Email  string `json:"email"`
 	Status string `json:"status"`
 	Client string `json:"clientID"`
+}
+
+type jsonPUTInput struct {
+	Email  []string `json:"emails"`
+	Status string   `json:"status"`
+	Client string   `json:"clientID"`
 }
 
 func getEmail(db *sql.DB, email string, client string) (isIn bool, status string, created time.Time) {
@@ -95,7 +101,7 @@ func resolveGet(requestURL []string, client string, db *sql.DB, w http.ResponseW
 	}
 }
 
-func resolvePost(body []byte, postInput jsonInput, db *sql.DB, w http.ResponseWriter) {
+func resolvePost(body []byte, postInput jsonPOSTInput, db *sql.DB, w http.ResponseWriter) {
 	blckIn, _ := db.Prepare("INSERT INTO blacklist(email,status,client,created) VALUES(?,?,?,?)")
 	if len(body) > 3 {
 		er := json.Unmarshal(body, &postInput)
@@ -124,6 +130,43 @@ func resolvePost(body []byte, postInput jsonInput, db *sql.DB, w http.ResponseWr
 	}
 }
 
+func resolvePut(body []byte, postInput jsonPUTInput, db *sql.DB, w http.ResponseWriter) {
+	blckIn, _ := db.Prepare("INSERT INTO blacklist(email,status,client,created) VALUES(?,?,?,?)")
+	if len(body) > 3 {
+		er := json.Unmarshal(body, &postInput)
+		if er != nil {
+			log.Fatal(er)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"error": {"code": "400", "status": "Bad request", "message": "Failed to add email to black list, data input is not correct."}}`))
+			return
+		}
+		outJSON := `{"items": [`
+		email := postInput.Email
+		client := postInput.Client
+		for index := range email {
+			isIn, _, _ := getEmail(db, email[index], client)
+			if isIn {
+				outJSON += `{ "email": "` + email[index] + `", "status": "Email was already added to blacklist"},`
+			} else {
+				time := time.Now()
+				status := postInput.Status
+				client := postInput.Client
+				blckIn.Exec(email[index], status, client, time)
+				outJSON += `{"email": "` + email[index] + `","status": "Email was added to blacklist"},`
+			}
+		}
+		if outJSON[len(outJSON)-1:] == "," {
+			outJSON = strings.TrimSuffix(outJSON, ",")
+		}
+		outJSON += `]}`
+		w.Write([]byte(outJSON))
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error": {"code": "400", "status": "Bad request", "message": "Failed to add email to black list, data input is not correct."}}`))
+		return
+	}
+}
+
 func resolveDelete(requestURL []string, client string, db *sql.DB, w http.ResponseWriter) {
 	delblck, _ := db.Prepare(`DELETE FROM blacklist  WHERE email like ? and client like ?;`)
 	email := requestURL[2]
@@ -142,7 +185,9 @@ func main() {
 		log.Fatal(err)
 	}
 	db.SetMaxOpenConns(10)
-	var postInput jsonInput
+	var postInput jsonPOSTInput
+	var putInput jsonPUTInput
+
 	//main function
 	APIRoot := func(w http.ResponseWriter, req *http.Request) {
 		var client string
@@ -168,7 +213,7 @@ func main() {
 				case "POST":
 					resolvePost(body, postInput, db, w)
 				case "PUT":
-					fmt.Println("Not implemented.")
+					resolvePut(body, putInput, db, w)
 				case "DELETE":
 					resolveDelete(requestURL, client, db, w)
 				default:
