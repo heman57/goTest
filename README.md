@@ -1,4 +1,6 @@
-# goTest
+# Blacklist
+
+Microservice which store blacklisted emails.
 
 **GET** /blacklist  - all emails response 
 

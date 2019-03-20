@@ -39,6 +39,7 @@ func getEmail(db *sql.DB, email string, client string) (isIn bool, status string
 	}
 	return
 }
+
 func getEmails(db *sql.DB, client string) (emails []string, statusArray []string, createdArray []time.Time) {
 	var email string
 	var status string
@@ -187,7 +188,6 @@ func main() {
 	db.SetMaxOpenConns(10)
 	var postInput jsonPOSTInput
 	var putInput jsonPUTInput
-
 	//main function
 	APIRoot := func(w http.ResponseWriter, req *http.Request) {
 		var client string
@@ -198,15 +198,16 @@ func main() {
 			w.Write([]byte(`{"error": {"code": "500", "status": "Error", "message": "Request failed."}}`))
 			return
 		} else {
-			if len(req.Header["Clientid"]) > 0 {
-				client = req.Header["Clientid"][0]
-			} else {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(`{"error": {"code": "400", "status": "Bad request", "message": "Client ID missing, data input is not correct."}}`))
-				return
-			}
+
 			requestURL := strings.Split(req.URL.Path, "/")
 			if requestURL[1] == "blacklist" {
+				if len(req.Header["Clientid"]) > 0 {
+					client = req.Header["Clientid"][0]
+				} else {
+					w.WriteHeader(http.StatusBadRequest)
+					w.Write([]byte(`{"error": {"code": "400", "status": "Bad request", "message": "Client ID missing, data input is not correct."}}`))
+					return
+				}
 				switch req.Method {
 				case "GET":
 					resolveGet(requestURL, client, db, w)
@@ -216,6 +217,7 @@ func main() {
 					resolvePut(body, putInput, db, w)
 				case "DELETE":
 					resolveDelete(requestURL, client, db, w)
+
 				default:
 					w.WriteHeader(http.StatusMethodNotAllowed)
 					w.Write([]byte(`{"error": {"code": "405", "status": "Forbiden", "message": "Method not allowed!"}}`))
